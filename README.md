@@ -8,7 +8,7 @@ Data Generation:
    https://github.com/ezstoltz/genetic-algorithm/blob/master/genetic_algorithm_TSP.ipynb
 
 
-Standard GA: RAZ
+Standard GA: RAZ - :white_check_mark:
 ------------
 1) Initialization
 2) Selection - Tournament
