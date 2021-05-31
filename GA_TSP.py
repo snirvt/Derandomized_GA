@@ -2,11 +2,13 @@ import numpy as np, random, operator
 import pandas as pd
 import matplotlib.pyplot as plt
 
+
 # City class for the TSP problem #
 class City:
-    def __init__(self, x, y):
+    def __init__(self, index, x, y):
         self.x = x
         self.y = y
+        self.index = index
 
     def distance(self, city):
         x_distance = abs(self.x - city.x)
@@ -15,7 +17,7 @@ class City:
         return distance
     
     def __repr__(self):
-        return '(' + str(self.x) + ',' + str(self.y) + ',' + ')'
+        return '(' + str(self.index) + ', (' + str(self.x) + ', ' + str(self.y) + '))'
 
 # Fitness class for evaluating fitness given route #
 class Fitness:
@@ -186,7 +188,7 @@ def derandomized_genetic_algorithm_plot(population, pop_size, elitism_size, muta
 if __name__ == '__main__':
     cities_list = []
     for i in range(25):
-        cities_list.append(City(x=int(random.random() * 200), y=int(random.random() * 200)))
+        cities_list.append(City(index = i + 1, x=int(random.random() * 200), y=int(random.random() * 200)))
 
     # print(genetic_algorithm(population=cities_list, pop_size=100, elitism_size=20, mutation_p=0.05, generations=500))
     genetic_algorithm_plot(population=cities_list, pop_size=100, elitism_size=20, mutation_p=0.01, generations=100)
