@@ -2,6 +2,8 @@ import numpy as np, random, operator
 import pandas as pd
 import matplotlib.pyplot as plt
 
+from graph_handler import *
+
 
 # City class for the TSP problem #
 class City:
@@ -182,15 +184,50 @@ def genetic_algorithm_plot(population, pop_size, elitism_size, mutation_p, gener
     plt.show()
 
 # TO IMPLEMENT #
+
+
+
+def next_generation_derandomized(current_gen, elitism_size, mutation_p):
+    ranked_pop = rank_individuals(current_gen)
+    selection_results = selection(ranked_pop, elitism_size)
+    mating_pool = create_mating_pool(current_gen, selection_results)
+    children = crossover_population(mating_pool, elitism_size)
+    next_gen = mutate_population(children, mutation_p)
+    return next_gen
+
+
+
+
 def derandomized_genetic_algorithm_plot(population, pop_size, elitism_size, mutation_p, generations):
-    return 0
+    # TODO create LSTM
+    G = create_city_graph(population)
+    node_embeddings, edge_embeddings, model = embed_graph(G, dimensions = 3, walk_length=30, num_walks=200, workers=4, window=10, min_count=1, batch_words=4)
+    normal_node_embeddings = node_embedding_normalizer(node_embeddings)
+    normal_edge_embeddings = edge_embedding_normalizer(edge_embeddings)
+    # get_edge_embedding_individual(normal_edge_embeddings, pop[0])
+    # get_node_embedding_individual(normal_node_embeddings, pop[0])
+
+
+    pop = initial_population(pop_size, population)
+    print(f'Initial distance: ' + str(1 / rank_individuals(pop)[0][1]))
+    progress = []
+    progress.append(1 / rank_individuals(pop)[0][1])
+
+    for i in range(generations):
+        pop = next_generation_derandomized(pop, elitism_size, mutation_p)
+        progress.append(1 / rank_individuals(pop)[0][1])
+    
+    print('Final distance: ' + str(1 / rank_individuals(pop)[0][1]))
+    plt.plot(progress)
+    plt.ylabel('Distance')
+    plt.xlabel('Generation')
+    plt.show()
 
 if __name__ == '__main__':
     cities_list = []
     for i in range(25):
-        cities_list.append(City(index = i + 1, x=int(random.random() * 200), y=int(random.random() * 200)))
+        cities_list.append(City(index = i, x=int(random.random() * 200), y=int(random.random() * 200)))
 
     # print(genetic_algorithm(population=cities_list, pop_size=100, elitism_size=20, mutation_p=0.05, generations=500))
-    genetic_algorithm_plot(population=cities_list, pop_size=100, elitism_size=20, mutation_p=0.01, generations=100)
+    # genetic_algorithm_plot(population=cities_list, pop_size=100, elitism_size=20, mutation_p=0.01, generations=100)
     derandomized_genetic_algorithm_plot(population=cities_list, pop_size=100, elitism_size=20, mutation_p=0.01, generations=100)
-    
