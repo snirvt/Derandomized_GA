@@ -194,6 +194,4 @@ if __name__ == '__main__':
     for i in range(100):
         cities_list.append(City(index = i + 1, x=int(random.random() * 200), y=int(random.random() * 200)))
     ### True is the flag whether to run randomized or not ###
-    both_algorithms(True, cities_list)
-    
-    
+    best_individual = both_algorithms(True, cities_list)
