@@ -240,19 +240,23 @@ def derandomized_genetic_algorithm_plot(population, pop_size, elitism_size, muta
         progress.append(1 / rank_individuals(pop)[0][1])
     
     print(f'Finale distance: ' + str(rank_individuals(pop)[0][1]))
-    plt.plot(progress)
-    plt.ylabel('Distance')
-    plt.xlabel('Generation')
-    plt.show()
+    return rank_individuals(pop)[0][1]
+    # plt.plot(progress)
+    # plt.ylabel('Distance')
+    # plt.xlabel('Generation')
+    # plt.show()
 def derandomized_genetic_algorithm_plot(population, pop_size, elitism_size, tournament_size, mutation_p, generations):
     return 0
+
+def both_algorithms(randomized, cities_list):
+    if randomized:
+        return genetic_algorithm_plot(population=cities_list, pop_size=100, elitism_size=20, tournament_size=10, mutation_p=0.01, generations=100)
+    else:
+        return derandomized_genetic_algorithm_plot(population=cities_list, pop_size=100, elitism_size=20, tournament_size=10, mutation_p=0.01, generations=100)
 
 if __name__ == '__main__':
     cities_list = []
     for i in range(25):
         cities_list.append(City(index = i + 1, x=int(random.random() * 200), y=int(random.random() * 200)))
 
-    # print(genetic_algorithm(population=cities_list, pop_size=100, elitism_size=20, mutation_p=0.05, generations=500))
-    genetic_algorithm_plot(population=cities_list, pop_size=100, elitism_size=20, tournament_size=10, mutation_p=0.01, generations=100)
-    # derandomized_genetic_algorithm_plot(population=cities_list, pop_size=100, elitism_size=20, tournament_size=10, mutation_p=0.01, generations=100)
-    
+    best_individual = both_algorithms(True, cities_list)
