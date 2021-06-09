@@ -231,7 +231,7 @@ def derandomized_genetic_algorithm_plot(population, pop_size, elitism_size, muta
 
 
     pop = initial_population(pop_size, population)
-    print(f'Initial distance: ' + str(1 / rank_individuals(pop)[0][1]))
+    print(f'Initial distance: ' + str(rank_individuals(pop)[0][1]))
     progress = []
     progress.append(1 / rank_individuals(pop)[0][1])
 
@@ -239,7 +239,7 @@ def derandomized_genetic_algorithm_plot(population, pop_size, elitism_size, muta
         pop = next_generation_derandomized(pop, elitism_size, mutation_p, model)
         progress.append(1 / rank_individuals(pop)[0][1])
     
-    print('Final distance: ' + str(1 / rank_individuals(pop)[0][1]))
+    print(f'Finale distance: ' + str(rank_individuals(pop)[0][1]))
     plt.plot(progress)
     plt.ylabel('Distance')
     plt.xlabel('Generation')
@@ -254,5 +254,5 @@ if __name__ == '__main__':
 
     # print(genetic_algorithm(population=cities_list, pop_size=100, elitism_size=20, mutation_p=0.05, generations=500))
     genetic_algorithm_plot(population=cities_list, pop_size=100, elitism_size=20, tournament_size=10, mutation_p=0.01, generations=100)
-    derandomized_genetic_algorithm_plot(population=cities_list, pop_size=100, elitism_size=20, tournament_size=10, mutation_p=0.01, generations=100)
+    # derandomized_genetic_algorithm_plot(population=cities_list, pop_size=100, elitism_size=20, tournament_size=10, mutation_p=0.01, generations=100)
     
