@@ -3,8 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from graph_handler import *
-
-
+from copy import deepcopy
 # City class for the TSP problem #
 class City:
     def __init__(self, index, x, y):
@@ -44,7 +43,7 @@ class Fitness:
 
     def route_fitness(self):
         if self.fitness == 0:
-            self.fitness = 1 / 1 + float(self.route_distance())
+            self.fitness = 1 / (1 + float(self.route_distance()))
         return self.fitness
 
 # Route generator #
@@ -55,7 +54,6 @@ def create_route(cities_list):
 # Population initialization #
 def initial_population(pop_size, cities_list):
     population = []
-
     for i in range(pop_size):
         population.append(create_route(cities_list))
     return population
@@ -135,10 +133,36 @@ def mutate(individual, mutation_p):
             individual[swapped], individual[swap_with] = individual[swap_with], individual[swapped]
     return individual
 
+
+
+def swapPositions(list, pos):
+    list[pos[0]], list[pos[1]] = list[pos[1]], list[pos[0]]
+    return list
+
+def one_swap(individual):
+    swap_idx = random.sample(range(len(individual)),k=2)
+    return swapPositions(individual, swap_idx),swap_idx
+
+# def one_swap_idx(individual,swap_idx):
+#     swap_idx = random.sample(range(len(individual)),k=2)
+#     return swapPositions(individual, swap_idx),swap_idx
+
 # Mutation over the entire population
 def mutate_population(population, mutation_p):
     mutated_pop = []
+    for i in range(len(population)):
+        mutated_individual = mutate(population[i], mutation_p)
+        mutated_pop.append(mutated_individual)
+    return mutated_pop
+
+def mutate_population_derandomized(population, mutation_p, model):
+    mutated_pop = []
     
+    for i in range(len(population)):
+        prev_fitness = rank_individuals(population)
+        mutated_ind, idx = one_swap(deepcopy(population[i]))
+        post_fitness = rank_individuals([mutated_ind])
+
     for i in range(len(population)):
         mutated_individual = mutate(population[i], mutation_p)
         mutated_pop.append(mutated_individual)
@@ -187,21 +211,22 @@ def genetic_algorithm_plot(population, pop_size, elitism_size, mutation_p, gener
 
 
 
-def next_generation_derandomized(current_gen, elitism_size, mutation_p):
+def next_generation_derandomized(current_gen, elitism_size, mutation_p, model):
     ranked_pop = rank_individuals(current_gen)
     selection_results = selection(ranked_pop, elitism_size)
     mating_pool = create_mating_pool(current_gen, selection_results)
     children = crossover_population(mating_pool, elitism_size)
-    next_gen = mutate_population(children, mutation_p)
+    next_gen = mutate_population_derandomized(children, mutation_p, model)
     return next_gen
 
 
-
+from model import get_model
 
 def derandomized_genetic_algorithm_plot(population, pop_size, elitism_size, mutation_p, generations):
     # TODO create LSTM
+    model = get_model()
     G = create_city_graph(population)
-    node_embeddings, edge_embeddings, model = embed_graph(G, dimensions = 3, walk_length=30, num_walks=200, workers=4, window=10, min_count=1, batch_words=4)
+    node_embeddings, edge_embeddings, model = embed_graph(G, dimensions = 5, walk_length=10, num_walks=2000, workers=4, window=10, min_count=1, batch_words=4)
     normal_node_embeddings = node_embedding_normalizer(node_embeddings)
     normal_edge_embeddings = edge_embedding_normalizer(edge_embeddings)
     # get_edge_embedding_individual(normal_edge_embeddings, pop[0])
@@ -214,7 +239,7 @@ def derandomized_genetic_algorithm_plot(population, pop_size, elitism_size, muta
     progress.append(1 / rank_individuals(pop)[0][1])
 
     for i in range(generations):
-        pop = next_generation_derandomized(pop, elitism_size, mutation_p)
+        pop = next_generation_derandomized(pop, elitism_size, mutation_p, model)
         progress.append(1 / rank_individuals(pop)[0][1])
     
     print('Final distance: ' + str(1 / rank_individuals(pop)[0][1]))
