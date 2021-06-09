@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 
 from graph_handler import *
 from copy import deepcopy
+
 # City class for the TSP problem #
 class City:
     def __init__(self, index, x, y):
@@ -43,7 +44,7 @@ class Fitness:
 
     def route_fitness(self):
         if self.fitness == 0:
-            self.fitness = 1 / (1 + float(self.route_distance()))
+            self.fitness = float(self.route_distance())
         return self.fitness
 
 # Route generator #
@@ -63,24 +64,20 @@ def rank_individuals(population):
     fitness_results = {}
     for i in range(len(population)):
         fitness_results[i] = Fitness(population[i]).route_fitness()
-    return sorted(fitness_results.items(), key = operator.itemgetter(1), reverse=True)
+    return sorted(fitness_results.items(), key = operator.itemgetter(1), reverse=False)
 
 # Selection function - cum_sum is cumulative sum
-def selection(ranked_pop, elitism_size):
+def selection(ranked_pop, elitism_size, tournament_size):
     selection_results = []
-    df = pd.DataFrame(np.array(ranked_pop), columns = ["index", "Fitness"])
-    df['cum_sum'] = df.Fitness.cumsum()
-    df['cum_perc'] = 100 * df.cum_sum/df.Fitness.sum()
 
     for i in range(elitism_size):
         selection_results.append(ranked_pop[i][0])
-    for i in range(len(ranked_pop) - elitism_size):
-        pick = 100 * random.random()
-        for i in range(len(ranked_pop)):
-            if pick <= df.iat[i, 3]:
-                selection_results.append(ranked_pop[i][0])
-                break
-    
+
+    for i in range(tournament_size):
+        tournament = [random.choice(ranked_pop) for i in range(tournament_size)]
+        best_ind = min(tournament, key=operator.itemgetter(1))
+        selection_results.append(best_ind[0])
+
     return selection_results
 
 # Creating the mating pool
@@ -169,9 +166,9 @@ def mutate_population_derandomized(population, mutation_p, model):
     return mutated_pop
 
 # Creating the next generation
-def next_generation(current_gen, elitism_size, mutation_p):
+def next_generation(current_gen, elitism_size, tournament_size, mutation_p):
     ranked_pop = rank_individuals(current_gen)
-    selection_results = selection(ranked_pop, elitism_size)
+    selection_results = selection(ranked_pop, elitism_size, tournament_size)
     mating_pool = create_mating_pool(current_gen, selection_results)
     children = crossover_population(mating_pool, elitism_size)
     next_gen = mutate_population(children, mutation_p)
@@ -180,28 +177,28 @@ def next_generation(current_gen, elitism_size, mutation_p):
 # Main loop
 def genetic_algorithm(population, pop_size, elitism_size, mutation_p, generations):
     pop = initial_population(pop_size, population)
-    print(f'Initial distance: ' + str(1 / rank_individuals(pop)[0][1]))
+    print(f'Initial distance: ' + str(rank_individuals(pop)[0][1]))
 
     for i in range(generations):
         pop = next_generation(pop, elitism_size, mutation_p)
     
-    print('Final distance: ' + str(1 / rank_individuals(pop)[0][1]))
+    print('Final distance: ' + str(rank_individuals(pop)[0][1]))
     best_individual_index = rank_individuals(pop)[0][0]
     best_individual = pop[best_individual_index]
     return best_individual
 
 # Plotting the progress
-def genetic_algorithm_plot(population, pop_size, elitism_size, mutation_p, generations):
+def genetic_algorithm_plot(population, pop_size, elitism_size, tournament_size, mutation_p, generations):
     pop = initial_population(pop_size, population)
-    print(f'Initial distance: ' + str(1 / rank_individuals(pop)[0][1]))
+    print(f'Initial distance: ' + str(rank_individuals(pop)[0][1]))
     progress = []
-    progress.append(1 / rank_individuals(pop)[0][1])
+    progress.append(rank_individuals(pop)[0][1])
 
     for i in range(generations):
-        pop = next_generation(pop, elitism_size, mutation_p)
-        progress.append(1 / rank_individuals(pop)[0][1])
+        pop = next_generation(pop, elitism_size, tournament_size, mutation_p)
+        progress.append(rank_individuals(pop)[0][1])
     
-    print('Final distance: ' + str(1 / rank_individuals(pop)[0][1]))
+    print('Final distance: ' + str(rank_individuals(pop)[0][1]))
     plt.plot(progress)
     plt.ylabel('Distance')
     plt.xlabel('Generation')
@@ -247,12 +244,15 @@ def derandomized_genetic_algorithm_plot(population, pop_size, elitism_size, muta
     plt.ylabel('Distance')
     plt.xlabel('Generation')
     plt.show()
+def derandomized_genetic_algorithm_plot(population, pop_size, elitism_size, tournament_size, mutation_p, generations):
+    return 0
 
 if __name__ == '__main__':
     cities_list = []
     for i in range(25):
-        cities_list.append(City(index = i, x=int(random.random() * 200), y=int(random.random() * 200)))
+        cities_list.append(City(index = i + 1, x=int(random.random() * 200), y=int(random.random() * 200)))
 
     # print(genetic_algorithm(population=cities_list, pop_size=100, elitism_size=20, mutation_p=0.05, generations=500))
-    # genetic_algorithm_plot(population=cities_list, pop_size=100, elitism_size=20, mutation_p=0.01, generations=100)
-    derandomized_genetic_algorithm_plot(population=cities_list, pop_size=100, elitism_size=20, mutation_p=0.01, generations=100)
+    genetic_algorithm_plot(population=cities_list, pop_size=100, elitism_size=20, tournament_size=10, mutation_p=0.01, generations=100)
+    derandomized_genetic_algorithm_plot(population=cities_list, pop_size=100, elitism_size=20, tournament_size=10, mutation_p=0.01, generations=100)
+    
