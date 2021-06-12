@@ -73,7 +73,7 @@ def selection(ranked_pop, elitism_size, tournament_size):
     for i in range(elitism_size):
         selection_results.append(ranked_pop[i][0])
 
-    for i in range(tournament_size):
+    for i in range(len(ranked_pop)-elitism_size):
         tournament = [random.choice(ranked_pop) for i in range(tournament_size)]
         best_ind = min(tournament, key=operator.itemgetter(1))
         selection_results.append(best_ind[0])
@@ -106,6 +106,7 @@ def crossover(first_parent, second_parent):
     child_sp = [elem for elem in second_parent if elem not in child_fp]
 
     child = child_fp + child_sp
+    
     return child
 
 # Crossover the population given mating pool and elitism size
@@ -117,9 +118,11 @@ def crossover_population(mating_pool, elitism_size):
     for i in range(elitism_size):
         children.append(mating_pool[i])
 
+
     for i in range(length):
         child = crossover(pool[i], pool[len(mating_pool)-i-1])
         children.append(child)
+
     return children
 
 # Swap Mutation
@@ -132,9 +135,9 @@ def mutate(individual, mutation_p):
 
 
 
-def swapPositions(list, pos):
-    list[pos[0]], list[pos[1]] = list[pos[1]], list[pos[0]]
-    return list
+def swapPositions(individual, pos):
+    individual[pos[0]], individual[pos[1]] = individual[pos[1]], individual[pos[0]]
+    return individual
 
 def one_swap(individual):
     swap_idx = random.sample(range(len(individual)),k=2)
@@ -148,22 +151,65 @@ def one_swap(individual):
 def mutate_population(population, mutation_p):
     mutated_pop = []
     for i in range(len(population)):
-        mutated_individual = mutate(population[i], mutation_p)
+        # mutated_individual = mutate(population[i], mutation_p)
+        mutated_individual,_ = one_swap(population[i])
         mutated_pop.append(mutated_individual)
     return mutated_pop
 
-def mutate_population_derandomized(population, mutation_p, model):
+def mutate_population_derandomized(population,normal_edge_embeddings, model, buffer_X,buffer_y, buffer_size, epsilon):
     mutated_pop = []
-    
+    improvment_list = []
+    idx_list = []
+    route_list = []
+
     for i in range(len(population)):
-        prev_fitness = rank_individuals(population)
-        mutated_ind, idx = one_swap(deepcopy(population[i]))
+        embedded_ind = get_edge_embedding_individual(normal_edge_embeddings, population[i])
+        if epsilon > random.random():
+            idx = random.sample(range(len(population[i])),k=2)
+        else:    
+            idx = np.argsort(model.predict(embedded_ind.reshape(1,49,5)))[0][-2:]
+        prev_fitness = rank_individuals([population[i]])
+        prev_individual = deepcopy(population[i])
+        mutated_ind = swapPositions(population[i], idx)
+        mutated_pop.append(mutated_ind)
+        # mutated_ind, idx = one_swap(deepcopy(population[i]))
         post_fitness = rank_individuals([mutated_ind])
 
-    for i in range(len(population)):
-        mutated_individual = mutate(population[i], mutation_p)
-        mutated_pop.append(mutated_individual)
+        if post_fitness[0][1] - prev_fitness[0][1] < 0:
+            # embedded_ind = get_edge_embedding_individual(normal_edge_embeddings, mutated_ind)
+            embedded_ind = get_edge_embedding_individual(normal_edge_embeddings, prev_individual)
+            idx_list.append((embedded_ind, idx))
+            # route_list.append((get_idividual_individual_route(population[i]),idx))
+            improvment_list.append(post_fitness[0][1] - prev_fitness[0][1])
+        else:
+            embedded_ind = get_edge_embedding_individual(normal_edge_embeddings, mutated_ind) 
+            idx_list.append((embedded_ind, idx))
+            # route_list.append((get_idividual_individual_route(mutated_ind),idx))
+            improvment_list.append(prev_fitness[0][1] - post_fitness[0][1])
+
+
+    imp_idx = np.argsort(improvment_list)[0:int(len(improvment_list)/4)]
+
+    X = np.zeros((len(idx_list),49,5))
+    y = np.zeros((len(idx_list),50))
+
+    for i in range(len(idx_list)):
+        X[i] = idx_list[i][0]
+        y[i][idx_list[i][1]] = 1
+
+    i = 0
+    while buffer_size[0] < buffer_X.shape[0] and i < int(len(improvment_list)/4):
+        buffer_X[buffer_size[0]] =  deepcopy(X[imp_idx][i])
+        buffer_y[buffer_size[0]] =  deepcopy(y[imp_idx][i])
+        buffer_size[0] += 1
+        i += 1
+    if i == 0:
+        buffer_idx = random.sample(range(buffer_X.shape[0]),int(len(improvment_list)/4))
+        buffer_X[buffer_idx] = deepcopy(X[imp_idx])
+        buffer_y[buffer_idx] = deepcopy(y[imp_idx])
+
     return mutated_pop
+
 
 # Creating the next generation
 def next_generation(current_gen, elitism_size, tournament_size, mutation_p):
@@ -171,6 +217,7 @@ def next_generation(current_gen, elitism_size, tournament_size, mutation_p):
     selection_results = selection(ranked_pop, elitism_size, tournament_size)
     mating_pool = create_mating_pool(current_gen, selection_results)
     children = crossover_population(mating_pool, elitism_size)
+
     next_gen = mutate_population(children, mutation_p)
     return next_gen
 
@@ -198,7 +245,7 @@ def genetic_algorithm_plot(population, pop_size, elitism_size, tournament_size, 
         pop = next_generation(pop, elitism_size, tournament_size, mutation_p)
         progress.append(rank_individuals(pop)[0][1])
     
-    print('Final distance: ' + str(rank_individuals(pop)[0][1]))
+    print('Final distance: ' + str(min(progress)))
     plt.plot(progress)
     plt.ylabel('Distance')
     plt.xlabel('Generation')
@@ -206,57 +253,70 @@ def genetic_algorithm_plot(population, pop_size, elitism_size, tournament_size, 
 
 # TO IMPLEMENT #
 
+def update_model(model, buffer_X, buffer_y, buffer_size):
+    model.fit(buffer_X[0:buffer_size[0],:], buffer_y[0:buffer_size[0]], batch_size=64, epochs=1)
 
-
-def next_generation_derandomized(current_gen, elitism_size, mutation_p, model):
+def next_generation_derandomized(current_gen, elitism_size, tournament_size, mutation_p, model, normal_edge_embeddings, buffer_X, buffer_y, buffer_size, epsilon):
     ranked_pop = rank_individuals(current_gen)
-    selection_results = selection(ranked_pop, elitism_size)
+    selection_results = selection(ranked_pop, elitism_size, tournament_size)
     mating_pool = create_mating_pool(current_gen, selection_results)
     children = crossover_population(mating_pool, elitism_size)
-    next_gen = mutate_population_derandomized(children, mutation_p, model)
+    next_gen = mutate_population_derandomized(population = children,
+        normal_edge_embeddings = normal_edge_embeddings , model = model,
+        buffer_X = buffer_X, buffer_y = buffer_y, buffer_size = buffer_size, epsilon = epsilon)
+    if buffer_size[0] == buffer_X.shape[0]:
+        update_model(model, buffer_X, buffer_y, buffer_size)
     return next_gen
-
 
 from model import get_model
 
-def derandomized_genetic_algorithm_plot(population, pop_size, elitism_size, mutation_p, generations):
-    # TODO create LSTM
+def derandomized_genetic_algorithm_plot(population, pop_size, elitism_size,tournament_size, mutation_p, generations, buffer_size_, epsilon):
     model = get_model()
     G = create_city_graph(population)
-    node_embeddings, edge_embeddings, model = embed_graph(G, dimensions = 5, walk_length=10, num_walks=2000, workers=4, window=10, min_count=1, batch_words=4)
+    node_embeddings, edge_embeddings, graph2vec = embed_graph(G, dimensions = 5, walk_length=10, num_walks=2000, workers=4, window=10, min_count=1, batch_words=4)
     normal_node_embeddings = node_embedding_normalizer(node_embeddings)
     normal_edge_embeddings = edge_embedding_normalizer(edge_embeddings)
     # get_edge_embedding_individual(normal_edge_embeddings, pop[0])
     # get_node_embedding_individual(normal_node_embeddings, pop[0])
 
-
     pop = initial_population(pop_size, population)
     print(f'Initial distance: ' + str(rank_individuals(pop)[0][1]))
     progress = []
-    progress.append(1 / rank_individuals(pop)[0][1])
+    progress.append(rank_individuals(pop)[0][1])
 
+    buffer_X = np.zeros((buffer_size_,49,5))
+    buffer_y = np.zeros((buffer_size_,50))
+    buffer_size = [0]
     for i in range(generations):
-        pop = next_generation_derandomized(pop, elitism_size, mutation_p, model)
-        progress.append(1 / rank_individuals(pop)[0][1])
+        pop = next_generation_derandomized(current_gen = pop, elitism_size = elitism_size,
+         tournament_size = tournament_size, mutation_p = mutation_p, model = model,
+          normal_edge_embeddings = normal_edge_embeddings, buffer_X = buffer_X,
+           buffer_y = buffer_y, buffer_size = buffer_size, epsilon = epsilon)
+        progress.append(rank_individuals(pop)[0][1])
     
-    print(f'Finale distance: ' + str(rank_individuals(pop)[0][1]))
-    return rank_individuals(pop)[0][1]
+    print(f'Finale distance: ' + str(min(progress)))
+    plt.plot(progress)
+    plt.ylabel('Distance')
+    plt.xlabel('Generation')
+    plt.show()
+    # return rank_individuals(pop)[0][1]
+    
     # plt.plot(progress)
     # plt.ylabel('Distance')
     # plt.xlabel('Generation')
     # plt.show()
-def derandomized_genetic_algorithm_plot(population, pop_size, elitism_size, tournament_size, mutation_p, generations):
-    return 0
+# def derandomized_genetic_algorithm_plot(population, pop_size, elitism_size, tournament_size, mutation_p, generations):
+#     return 0
 
 def both_algorithms(randomized, cities_list):
     if randomized:
-        return genetic_algorithm_plot(population=cities_list, pop_size=100, elitism_size=20, tournament_size=10, mutation_p=0.01, generations=100)
+        return genetic_algorithm_plot(population=cities_list, pop_size=1000, elitism_size=2, tournament_size=3, mutation_p=0.01, generations=10)
     else:
-        return derandomized_genetic_algorithm_plot(population=cities_list, pop_size=100, elitism_size=20, tournament_size=10, mutation_p=0.01, generations=100)
+        return derandomized_genetic_algorithm_plot(population=cities_list, pop_size=1000, elitism_size=2, tournament_size=3, mutation_p=0.01, generations=10, buffer_size_ = 500, epsilon=0.1)
 
 if __name__ == '__main__':
     cities_list = []
-    for i in range(25):
-        cities_list.append(City(index = i + 1, x=int(random.random() * 200), y=int(random.random() * 200)))
+    for i in range(50):
+        cities_list.append(City(index = i, x=int(random.random() * 1000), y=int(random.random() * 1000)))
 
-    best_individual = both_algorithms(True, cities_list)
+    best_individual = both_algorithms(False, cities_list)
