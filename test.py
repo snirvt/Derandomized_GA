@@ -35,7 +35,7 @@ plt.show()
 import pandas as pd
 idx_list = []
 route_list = []
-improvment_list =[]
+improvment_list = []
 data = pd.DataFrame()
 
 for _ in range(50000):
@@ -49,7 +49,12 @@ for _ in range(50000):
         idx_list.append((embedded_ind, idx))
         route_list.append((get_idividual_individual_route(pop[0]),idx))
         improvment_list.append(post_fitness[0][1] - prev_fitness[0][1])
-        
+    else:
+        embedded_ind = get_edge_embedding_individual(normal_edge_embeddings, mutated_ind) 
+        idx_list.append((embedded_ind, idx))
+        route_list.append((get_idividual_individual_route(mutated_ind),idx))
+        improvment_list.append(prev_fitness[0][1] - post_fitness[0][1])
+
         # idx_list.append((mutated_ind, idx))
 
 # https://machinelearningmastery.com/reshape-input-data-long-short-term-memory-networks-keras/
