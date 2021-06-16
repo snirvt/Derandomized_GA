@@ -10,7 +10,7 @@ import numpy as np
 # https://www.geeksforgeeks.org/directed-graphs-multigraphs-and-visualization-in-networkx/
 # https://www.geeksforgeeks.org/networkx-python-software-package-study-complex-networks/
 # https://github.com/eliorc/node2vec
-
+# http://ise.thss.tsinghua.edu.cn/~wangchaokun/edge2vec/tkdd_embedding_accepted.pdf
 
 def create_city_graph(cities_list):
     G = nx.Graph()
