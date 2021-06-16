@@ -86,7 +86,7 @@ def plot_all_runs(rand_progress, new_progress, title='All Runs', ylabel='Route D
     plt.plot(rand_progress.T, color='r')
     plt.plot([],[], 'r', label='Naive')
     plt.plot(new_progress.T, color='b')
-    plt.plot([],[], 'b', label='Smart')
+    plt.plot([],[], 'b', label='New')
     plt.legend(prop={'size': 20})
     plt.title(title, fontsize=30)
     plt.xlabel('Generations', fontsize=22)
@@ -98,7 +98,7 @@ def plot_mean_runs(rand_progress, new_progress, title='Mean Runs', ylabel='Route
     plt.plot(rand_progress.mean(axis=0), color='r', marker='o',
         linestyle='dashed',linewidth=2, markersize=12, label='Naive')
     plt.plot(new_progress.mean(axis=0), color='b', marker='*',
-        linestyle='dashed',linewidth=2, markersize=12, label='Smart')
+        linestyle='dashed',linewidth=2, markersize=12, label='New')
     plt.legend(prop={'size': 20})
     plt.title(title, fontsize=30)
     plt.xlabel('Generations', fontsize=22)
