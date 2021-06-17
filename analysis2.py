@@ -84,9 +84,9 @@ def create_mutation_distribution_compare(generation_list):
        
         axs[i, 0].axvline(mean, color='lime', linestyle='dashed', linewidth=5)
         axs[i, 0].axvline(median, color='m', linestyle='dashed', linewidth=5)
-        mean_patch = mpatches.Patch(color='lime', label='Mean: {}'.format(mean))
-        std_patch = mpatches.Patch(color=None, label='Std: {}'.format(std))
-        median_patch = mpatches.Patch(color='m', label='Median: {}'.format(median))
+        mean_patch = mpatches.Patch(color='lime', label='Mean: {}'.format(np.round(mean, 2)))
+        std_patch = mpatches.Patch(color=None, label='Std: {}'.format(np.round(std, 2)))
+        median_patch = mpatches.Patch(color='m', label='Median: {}'.format(np.round(median, 2)))
         axs[i, 0].legend(handles=[mean_patch, median_patch, std_patch], frameon=True)
         axs[i, 0].set_xlim(lim_min, lim_max)
 
@@ -99,16 +99,17 @@ def create_mutation_distribution_compare(generation_list):
 
         axs[i, 1].axvline(mean, color='lime', linestyle='dashed', linewidth=5)
         axs[i, 1].axvline(median, color='m', linestyle='dashed', linewidth=5)
-        mean_patch = mpatches.Patch(color='lime', label='Mean: {}'.format(mean))
-        std_patch = mpatches.Patch(color=None, label='Std: {}'.format(std))
-        median_patch = mpatches.Patch(color='m', label='Median: {}'.format(median))
-        p_value_patch = mpatches.Patch(color='b', label='p_value: {}'.format(p_value))
+        mean_patch = mpatches.Patch(color='lime', label='Mean: {}'.format(np.round(mean, 2)))
+        std_patch = mpatches.Patch(color=None, label='Std: {}'.format(np.round(std, 2)))
+        median_patch = mpatches.Patch(color='m', label='Median: {}'.format(np.round(median, 2)))
+        p_value_patch = mpatches.Patch(color='b', label='p_value: {}'.format(np.round(p_value, 4)))
         axs[i, 1].legend(handles=[mean_patch, median_patch, std_patch, p_value_patch], frameon=True)
         axs[i, 1].set_xlim(lim_min, lim_max)
 
     fig.text(0.5, 0.04, 'fitness difference', ha='center', fontsize=16)
     fig.text(0.07, 0.5, 'mutations', va='center', rotation='vertical', fontsize=16)
-    fig.supylabel('New Algorithm                  Naive Algorithm', fontsize=25)
+    fig.supxlabel('Baseline                                                                                  MULANN', fontsize=20, y=0.9)
+    fig.suptitle('Mutation Fitness Delta (distribution) by Generation', fontsize=30)
     plt.show()
 
 
@@ -124,7 +125,7 @@ def plot_all_runs(rand_progress, new_progress, title='All Runs', ylabel='Route D
     plt.tick_params(axis='both', labelsize=15)
     plt.show()
 
-def plot_mean_runs(rand_progress, new_progress, title='Best Individual (average for all runs)', ylabel='Route Distance'):
+def plot_mean_runs(rand_progress, new_progress, title='Best Individual per Generation (average for all runs)', ylabel='Route Distance'):
     plt.plot(rand_progress.mean(axis=0), color='r', marker='o',
         linestyle='dashed',linewidth=2, markersize=12, label='Baseline')
     plt.plot(new_progress.mean(axis=0), color='b', marker='*',
@@ -138,8 +139,9 @@ def plot_mean_runs(rand_progress, new_progress, title='Best Individual (average 
 
 def plot_all_runs_final_result(rand_progress, new_progress):
     progress = list(sorted(zip(rand_progress.max(axis=1).tolist(), new_progress.max(axis=1).tolist()), key=lambda x: x[0]+x[1]))
-    plt.plot([x[0] for x in progress], color='r', linestyle='None', marker='o', markersize=12, label='Baseline')
-    plt.plot([x[1] for x in progress], color='b', linestyle='None', marker='*', markersize=12, label='MULANN')
+    x_axis = range(1, len(progress)+1)
+    plt.plot(x_axis, [x[0] for x in progress], color='r', linestyle='None', marker='o', markersize=12, label='Baseline')
+    plt.plot(x_axis, [x[1] for x in progress], color='b', linestyle='None', marker='*', markersize=12, label='MULANN')
     plt.legend(prop={'size': 20})
     plt.title('Best Individual per Experiment', fontsize=30)
     plt.xlabel('Experiment', fontsize=22)
@@ -168,10 +170,10 @@ print(new_progress.max(axis=1))
 _, paired_t_test = scipy.stats.ttest_rel(new_progress.max(axis=1), rand_progress.max(axis=1), alternative='less') 
 print(f"p value for paired t-test is {paired_t_test}")
 
-plot_all_runs_final_result(rand_progress, new_progress)
+# plot_all_runs_final_result(rand_progress, new_progress)
 
-plot_all_runs(rand_mutation_stats_mean_per_generation, new_mutation_stats_mean_per_generation, ylabel='Change In Route Distance')
-plot_mean_runs(rand_mutation_stats_mean_per_generation, new_mutation_stats_mean_per_generation, ylabel='Change In Route Distance')
+# plot_all_runs(rand_mutation_stats_mean_per_generation, new_mutation_stats_mean_per_generation, ylabel='Change In Route Distance')
+# plot_mean_runs(rand_mutation_stats_mean_per_generation, new_mutation_stats_mean_per_generation, ylabel='Change In Route Distance')
 
 # generation_list = range(15)
 generation_list = [0,4,9,14]
