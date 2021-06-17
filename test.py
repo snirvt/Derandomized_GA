@@ -9,7 +9,6 @@ from GA_TSP import City,initial_population,create_route, mutate,Fitness,rank_ind
 from graph_handler import create_city_graph,embed_graph,get_edge_embedding_individual,node_embedding_normalizer,edge_embedding_normalizer,edge_embedding_normalizer,get_idividual_individual_route
 import random
 
-
 cities_list = []
 for i in range(50):
     cities_list.append(City(index = i , x=int(random.random() * 1000), y=int(random.random() * 1000)))
@@ -98,8 +97,8 @@ np.argsort(model.predict(X_test[0:1]))[0][-2:]
 
 
 dif_deep = []
-for _ in range(10000):
-    pop = initial_population(1, cities_list)
+pop_all = initial_population(15000, cities_list)
+for pop in pop_all:
     prev_fitness = rank_individuals(pop)
     # mutated_ind, idx = one_swap(deepcopy(pop[0]))
     embedded_ind = get_edge_embedding_individual(normal_edge_embeddings, pop[0])
@@ -110,100 +109,113 @@ for _ in range(10000):
 import matplotlib.pyplot as plt
 print(np.mean(dif_deep))
 print(np.std(dif_deep))
-plt.hist(dif_deep)
-plt.show()
 
+from mlxtend.evaluate import permutation_test
+def p_value_one_sided(treatment, control):
+    p_value = permutation_test(treatment, control,
+                            method='approximate',
+                            num_rounds=10000,
+                            seed=42,
+                            func=lambda x, y: np.mean(y) - np.mean(x))
+    return p_value
 
-plt.hist(dif_random, alpha=0.5)
-plt.hist(dif_deep, alpha=0.5)
-plt.show()
+print(f"p_value is {p_value_one_sided(dif_deep, dif_random)}")
 
-
-
-print(history.history.keys())
-# summarize history for accuracy
-plt.plot(history.history['acc'])
-plt.plot(history.history['val_acc'])
-plt.title('model accuracy')
-plt.ylabel('accuracy')
-plt.xlabel('epoch')
-plt.legend(['train', 'test'], loc='upper left')
-plt.show()
-# summarize history for loss
-plt.plot(history.history['loss'])
-plt.plot(history.history['val_loss'])
-plt.title('model loss')
-plt.ylabel('loss')
-plt.xlabel('epoch')
-plt.legend(['train', 'test'], loc='upper left')
+plt.title("Mutation Fitness Delta (distribution) POC", fontsize=30)
+plt.xlabel('Fitness Detla', fontsize=22)
+plt.ylabel('# of Mutations', fontsize=22)
+plt.tick_params(axis='both', labelsize=15)
+plt.hist(dif_random, alpha=0.5, label='random')
+plt.hist(dif_deep, alpha=0.5, label='ANN')
+plt.legend(prop={'size': 20})
 plt.show()
 
 
 
-import numpy as np
-from tensorflow import keras
-from tensorflow.keras import layers
-max_features = 20000  # Only consider the top 20k words
-maxlen = 200  # Only consider the first 200 words of each movie review
-
-# Input for variable-length sequences of integers
-# inputs = keras.Input(shape=(49,3), dtype="int32")
-inputs = keras.Input(shape=(None,), dtype="int32")
-
-# Embed each integer in a 128-dimensional vector
-# x = layers.Embedding(max_features, 128)(inputs)
-x = inputs
-# Add 2 bidirectional LSTMs
-x = layers.Bidirectional(layers.LSTM(64, return_sequences=True))(x)
-x = layers.Bidirectional(layers.LSTM(64))(x)
-# Add a classifier
-outputs = layers.Dense(1, activation="categorical_crossentropy")(x)
-model = keras.Model(inputs, outputs)
-model.summary()
-
-(x_train, y_train), (x_val, y_val) = keras.datasets.imdb.load_data(
-    num_words=max_features
-)
-print(len(x_train), "Training sequences")
-print(len(x_val), "Validation sequences")
-x_train = keras.preprocessing.sequence.pad_sequences(x_train, maxlen=maxlen)
-x_val = keras.preprocessing.sequence.pad_sequences(x_val, maxlen=maxlen)
-
-
-model.compile("adam", "categorical_crossentropy", metrics=["accuracy"])
-model.fit(x_train, y_train, batch_size=32, epochs=2, validation_data=(x_val, y_val))
+# print(history.history.keys())
+# # summarize history for accuracy
+# plt.plot(history.history['acc'])
+# plt.plot(history.history['val_acc'])
+# plt.title('model accuracy')
+# plt.ylabel('accuracy')
+# plt.xlabel('epoch')
+# plt.legend(['train', 'test'], loc='upper left')
+# plt.show()
+# # summarize history for loss
+# plt.plot(history.history['loss'])
+# plt.plot(history.history['val_loss'])
+# plt.title('model loss')
+# plt.ylabel('loss')
+# plt.xlabel('epoch')
+# plt.legend(['train', 'test'], loc='upper left')
+# plt.show()
 
 
 
-idx_list[0][0] 
-get_edge_embedding_individual(normal_edge_embeddings, idx_list[0][0]).shape
+# import numpy as np
+# from tensorflow import keras
+# from tensorflow.keras import layers
+# max_features = 20000  # Only consider the top 20k words
+# maxlen = 200  # Only consider the first 200 words of each movie review
+
+# # Input for variable-length sequences of integers
+# # inputs = keras.Input(shape=(49,3), dtype="int32")
+# inputs = keras.Input(shape=(None,), dtype="int32")
+
+# # Embed each integer in a 128-dimensional vector
+# # x = layers.Embedding(max_features, 128)(inputs)
+# x = inputs
+# # Add 2 bidirectional LSTMs
+# x = layers.Bidirectional(layers.LSTM(64, return_sequences=True))(x)
+# x = layers.Bidirectional(layers.LSTM(64))(x)
+# # Add a classifier
+# outputs = layers.Dense(1, activation="categorical_crossentropy")(x)
+# model = keras.Model(inputs, outputs)
+# model.summary()
+
+# (x_train, y_train), (x_val, y_val) = keras.datasets.imdb.load_data(
+#     num_words=max_features
+# )
+# print(len(x_train), "Training sequences")
+# print(len(x_val), "Validation sequences")
+# x_train = keras.preprocessing.sequence.pad_sequences(x_train, maxlen=maxlen)
+# x_val = keras.preprocessing.sequence.pad_sequences(x_val, maxlen=maxlen)
+
+
+# model.compile("adam", "categorical_crossentropy", metrics=["accuracy"])
+# model.fit(x_train, y_train, batch_size=32, epochs=2, validation_data=(x_val, y_val))
 
 
 
-get_edge_embedding_individual(normal_edge_embeddings, pop[0])
-
-
-import matplotlib.pyplot as plt
-plt.hist(dif)
-plt.show()
-
-get_node_order(pop[0])
+# idx_list[0][0] 
+# get_edge_embedding_individual(normal_edge_embeddings, idx_list[0][0]).shape
 
 
 
-
-one_swap(individual)
-def swapPositions(list, pos):
-    list[pos[0]], list[pos[1]] = list[pos[1]], list[pos[0]]
-    return list
+# get_edge_embedding_individual(normal_edge_embeddings, pop[0])
 
 
-rank_individuals([swapPositions(deepcopy(pop[0]),idx)])
+# import matplotlib.pyplot as plt
+# plt.hist(dif)
+# plt.show()
+
+# get_node_order(pop[0])
 
 
-pop[0]
-idx = random.sample(range(5),k=2)
-swapPositions(pop[0], idx)
+
+
+# one_swap(individual)
+# def swapPositions(list, pos):
+#     list[pos[0]], list[pos[1]] = list[pos[1]], list[pos[0]]
+#     return list
+
+
+# rank_individuals([swapPositions(deepcopy(pop[0]),idx)])
+
+
+# pop[0]
+# idx = random.sample(range(5),k=2)
+# swapPositions(pop[0], idx)
 
 # A = np.array([[1, 1,0.5], [2, 1,0.5],[3,1,0.5]])
 # G = nx.from_numpy_matrix(A)
