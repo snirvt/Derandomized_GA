@@ -8,128 +8,145 @@ from copy import deepcopy
 from GA_TSP import City,initial_population,create_route, mutate,Fitness,rank_individuals,initial_population,one_swap,swapPositions
 from graph_handler import create_city_graph,embed_graph,get_edge_embedding_individual,node_embedding_normalizer,edge_embedding_normalizer,edge_embedding_normalizer,get_idividual_individual_route
 import random
+import pickle
 
-cities_list = []
-for i in range(50):
-    cities_list.append(City(index = i , x=int(random.random() * 1000), y=int(random.random() * 1000)))
-G = create_city_graph(cities_list)
+# cities_list = []
+# for i in range(50):
+#     cities_list.append(City(index = i , x=int(random.random() * 1000), y=int(random.random() * 1000)))
+# G = create_city_graph(cities_list)
 
-node_embeddings, edge_embeddings, model = embed_graph(G, dimensions = 5, walk_length=10, num_walks=2000, workers=4, window=10, min_count=1, batch_words=4)
-normal_edge_embeddings = edge_embedding_normalizer(edge_embeddings)
+# node_embeddings, edge_embeddings, model = embed_graph(G, dimensions = 5, walk_length=10, num_walks=2000, workers=4, window=10, min_count=1, batch_words=4)
+# normal_edge_embeddings = edge_embedding_normalizer(edge_embeddings)
 
-dif_random = []
-for _ in range(10000):
-    pop = initial_population(1, cities_list)
-    prev_fitness = rank_individuals(pop)
-    mutated_ind, idx = one_swap(deepcopy(pop[0]))
-    post_fitness = rank_individuals([mutated_ind])
-    dif_random.append(post_fitness[0][1] - prev_fitness[0][1])
-import matplotlib.pyplot as plt
-print(np.mean(dif_random))
-print(np.std(dif_random))
-plt.hist(dif_random)
-plt.show()
-
-
-import pandas as pd
-idx_list = []
-route_list = []
-improvment_list = []
-data = pd.DataFrame()
-
-for _ in range(50000):
-    pop = initial_population(1, cities_list)
-    prev_fitness = rank_individuals(pop)
-    mutated_ind, idx = one_swap(deepcopy(pop[0]))
-    post_fitness = rank_individuals([mutated_ind])
-    if post_fitness[0][1] - prev_fitness[0][1] < 0:
-        # embedded_ind = get_edge_embedding_individual(normal_edge_embeddings, mutated_ind)
-        embedded_ind = get_edge_embedding_individual(normal_edge_embeddings, pop[0])
-        idx_list.append((embedded_ind, idx))
-        route_list.append((get_idividual_individual_route(pop[0]),idx))
-        improvment_list.append(post_fitness[0][1] - prev_fitness[0][1])
-    else:
-        embedded_ind = get_edge_embedding_individual(normal_edge_embeddings, mutated_ind) 
-        idx_list.append((embedded_ind, idx))
-        route_list.append((get_idividual_individual_route(mutated_ind),idx))
-        improvment_list.append(prev_fitness[0][1] - post_fitness[0][1])
-
-        # idx_list.append((mutated_ind, idx))
-
-# https://machinelearningmastery.com/reshape-input-data-long-short-term-memory-networks-keras/
-
-X = np.zeros((len(idx_list),49,5))
-y = np.zeros((len(idx_list),50))
-
-for i in range(len(idx_list)):
-    X[i] = idx_list[i][0]
-    y[i][idx_list[i][1]] = 1
+# dif_random = []
+# for _ in range(15000):
+#     pop = initial_population(1, cities_list)
+#     prev_fitness = rank_individuals(pop)
+#     mutated_ind, idx = one_swap(deepcopy(pop[0]))
+#     post_fitness = rank_individuals([mutated_ind])
+#     dif_random.append(post_fitness[0][1] - prev_fitness[0][1])
+# import matplotlib.pyplot as plt
+# print(np.mean(dif_random))
+# print(np.std(dif_random))
+# plt.hist(dif_random)
+# plt.show()
 
 
+# import pandas as pd
+# idx_list = []
+# route_list = []
+# improvment_list = []
+# data = pd.DataFrame()
+
+# for _ in range(50000):
+#     pop = initial_population(1, cities_list)
+#     prev_fitness = rank_individuals(pop)
+#     mutated_ind, idx = one_swap(deepcopy(pop[0]))
+#     post_fitness = rank_individuals([mutated_ind])
+#     if post_fitness[0][1] - prev_fitness[0][1] < 0:
+#         # embedded_ind = get_edge_embedding_individual(normal_edge_embeddings, mutated_ind)
+#         embedded_ind = get_edge_embedding_individual(normal_edge_embeddings, pop[0])
+#         idx_list.append((embedded_ind, idx))
+#         route_list.append((get_idividual_individual_route(pop[0]),idx))
+#         improvment_list.append(post_fitness[0][1] - prev_fitness[0][1])
+#     else:
+#         embedded_ind = get_edge_embedding_individual(normal_edge_embeddings, mutated_ind) 
+#         idx_list.append((embedded_ind, idx))
+#         route_list.append((get_idividual_individual_route(mutated_ind),idx))
+#         improvment_list.append(prev_fitness[0][1] - post_fitness[0][1])
+
+#         # idx_list.append((mutated_ind, idx))
+
+# # https://machinelearningmastery.com/reshape-input-data-long-short-term-memory-networks-keras/
+
+# X = np.zeros((len(idx_list),49,5))
+# y = np.zeros((len(idx_list),50))
+
+# for i in range(len(idx_list)):
+#     X[i] = idx_list[i][0]
+#     y[i][idx_list[i][1]] = 1
 
 
 
-import numpy as np
-from tensorflow import keras
-from tensorflow.keras import layers,Sequential
-from sklearn.model_selection import train_test_split
-import functools
-top2_acc = functools.partial(keras.metrics.top_k_categorical_accuracy, k=2)
+
+
+# import numpy as np
+# from tensorflow import keras
+# from tensorflow.keras import layers,Sequential
+# from sklearn.model_selection import train_test_split
+# import functools
+# top2_acc = functools.partial(keras.metrics.top_k_categorical_accuracy, k=2)
+
+# # model = Sequential()
+# # model.add(layers.LSTM(100, input_shape=(49, 5)))
+# # model.add(layers.Dense(50,activation="sigmoid"))
 
 # model = Sequential()
-# model.add(layers.LSTM(100, input_shape=(49, 5)))
+# model.add(layers.Bidirectional(layers.LSTM(32, return_sequences=True)))
+# model.add(layers.Bidirectional(layers.LSTM(32)))
 # model.add(layers.Dense(50,activation="sigmoid"))
-
-model = Sequential()
-model.add(layers.Bidirectional(layers.LSTM(32, return_sequences=True)))
-model.add(layers.Bidirectional(layers.LSTM(32)))
-model.add(layers.Dense(50,activation="sigmoid"))
-model.compile("adam", "categorical_crossentropy", metrics=["accuracy"])
+# model.compile("adam", "categorical_crossentropy", metrics=["accuracy"])
 
 
-imp_idx = np.argsort(improvment_list)[0:int(len(improvment_list)/2)]
+# imp_idx = np.argsort(improvment_list)[0:int(len(improvment_list)/2)]
 
-X_train, X_test, y_train, y_test = train_test_split(X[imp_idx], y[imp_idx], test_size=0.2)
+# X_train, X_test, y_train, y_test = train_test_split(X[imp_idx], y[imp_idx], test_size=0.2)
 
-history = model.fit(X_train, y_train, batch_size=64, epochs=10, validation_data=(X_test, y_test))
+# history = model.fit(X_train, y_train, batch_size=64, epochs=10, validation_data=(X_test, y_test))
 
-np.argsort(model.predict(X_test[0:1]))[0][-2:]
+# np.argsort(model.predict(X_test[0:1]))[0][-2:]
 
 
-dif_deep = []
-pop_all = initial_population(15000, cities_list)
-for pop in pop_all:
-    prev_fitness = rank_individuals(pop)
-    # mutated_ind, idx = one_swap(deepcopy(pop[0]))
-    embedded_ind = get_edge_embedding_individual(normal_edge_embeddings, pop[0])
-    idx = np.argsort(model.predict(embedded_ind.reshape(1,49,5)))[0][-2:]
-    mutated_ind = swapPositions(deepcopy(pop[0]), idx)
-    post_fitness = rank_individuals([mutated_ind])
-    dif_deep.append(post_fitness[0][1] - prev_fitness[0][1])
-import matplotlib.pyplot as plt
-print(np.mean(dif_deep))
-print(np.std(dif_deep))
+# dif_deep = []
+# for _ in range(15000):
+#     pop = initial_population(1, cities_list)
+#     prev_fitness = rank_individuals(pop)
+#     # mutated_ind, idx = one_swap(deepcopy(pop[0]))
+#     embedded_ind = get_edge_embedding_individual(normal_edge_embeddings, pop[0])
+#     idx = np.argsort(model.predict(embedded_ind.reshape(1,49,5)))[0][-2:]
+#     mutated_ind = swapPositions(deepcopy(pop[0]), idx)
+#     post_fitness = rank_individuals([mutated_ind])
+#     dif_deep.append(post_fitness[0][1] - prev_fitness[0][1])
+# import matplotlib.pyplot as plt
+# print(np.mean(dif_deep))
+# print(np.std(dif_deep))
 
-from mlxtend.evaluate import permutation_test
-def p_value_one_sided(treatment, control):
-    p_value = permutation_test(treatment, control,
-                            method='approximate',
-                            num_rounds=10000,
-                            seed=42,
-                            func=lambda x, y: np.mean(y) - np.mean(x))
-    return p_value
+# with open('dif_random.pickle', 'wb') as handle:
+#     pickle.dump(dif_random, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-print(f"p_value is {p_value_one_sided(dif_deep, dif_random)}")
+# with open('dif_deep.pickle', 'wb') as handle:
+#     pickle.dump(dif_deep, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+with open('dif_random.pickle', 'rb') as handle:
+    dif_random = pickle.load(handle)
+
+with open('dif_deep.pickle', 'rb') as handle:
+    dif_deep = pickle.load(handle)
+
+# from mlxtend.evaluate import permutation_test
+# def p_value_one_sided(treatment, control):
+#     p_value = permutation_test(treatment, control,
+#                             method='approximate',
+#                             num_rounds=10000,
+#                             seed=42,
+#                             func=lambda x, y: np.mean(y) - np.mean(x))
+#     return p_value
+
+# print(f"p_value is {p_value_one_sided(dif_deep, dif_random)}")
 
 plt.title("Mutation Fitness Delta (distribution) POC", fontsize=30)
 plt.xlabel('Fitness Detla', fontsize=22)
 plt.ylabel('# of Mutations', fontsize=22)
 plt.tick_params(axis='both', labelsize=15)
-plt.hist(dif_random, alpha=0.5, label='random')
-plt.hist(dif_deep, alpha=0.5, label='ANN')
+plt.hist(dif_random, alpha=0.5, label='random', bins=100)
+plt.hist(dif_deep, alpha=0.5, label='ANN', bins=100)
 plt.legend(prop={'size': 20})
 plt.show()
 
+print(np.mean(dif_random))
+print(np.std(dif_random))
+print(np.mean(dif_deep))
+print(np.std(dif_deep))
 
 
 # print(history.history.keys())
