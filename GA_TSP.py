@@ -368,7 +368,7 @@ def get_statistics(iterations=30):
         mutated_stats_list_list_rand.append(mutated_stats_list_rand)
         
         random.seed(temp_seed)
-        progress_new , mutated_stats_list_new = derandomized_genetic_algorithm_plot(population=cities_list, pop_size=1000, elitism_size=1, tournament_size=2, mutation_p=0.01, generations=15, buffer_size_ = 500, epsilon=0.5)
+        progress_new , mutated_stats_list_new = derandomized_genetic_algorithm_plot(population=cities_list, pop_size=1000, elitism_size=1, tournament_size=2, mutation_p=0.01, generations=15, buffer_size_ = 500, epsilon=0.3)
 
         progress_list_new.append(progress_new)
         mutated_stats_list_list_new.append(mutated_stats_list_new)
@@ -379,7 +379,7 @@ def get_statistics(iterations=30):
     writeToExcel('new.xlsx', 'mutation_stats', pd.DataFrame(mutated_stats_list_list_new))
     writeToExcel('new.xlsx', 'progress', pd.DataFrame(progress_list_new))
 
-get_statistics(iterations=30)
+# get_statistics(iterations=30)
 
 
 
