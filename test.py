@@ -96,9 +96,11 @@ history = model.fit(X_train, y_train, batch_size=64, epochs=10, validation_data=
 np.argsort(model.predict(X_test[0:1]))[0][-2:]
 
 
+
+
 dif_deep = []
-pop_all = initial_population(15000, cities_list)
-for pop in pop_all:
+for _ in range(10000):
+    pop = initial_population(1, cities_list)
     prev_fitness = rank_individuals(pop)
     # mutated_ind, idx = one_swap(deepcopy(pop[0]))
     embedded_ind = get_edge_embedding_individual(normal_edge_embeddings, pop[0])
@@ -109,8 +111,27 @@ for pop in pop_all:
 import matplotlib.pyplot as plt
 print(np.mean(dif_deep))
 print(np.std(dif_deep))
+plt.hist(dif_deep)
+plt.show()
+
+# dif_deep = []
+# pop_all = initial_population(100, cities_list)
+# for pop in pop_all:
+#     prev_fitness = rank_individuals(pop)
+#     # mutated_ind, idx = one_swap(deepcopy(pop[0]))
+#     embedded_ind = get_edge_embedding_individual(normal_edge_embeddings, pop[0])
+#     idx = np.argsort(model.predict(embedded_ind.reshape(1,49,5)))[0][-2:]
+#     mutated_ind = swapPositions(deepcopy(pop[0]), idx)
+#     post_fitness = rank_individuals([mutated_ind])
+#     dif_deep.append(post_fitness[0][1] - prev_fitness[0][1])
+# import matplotlib.pyplot as plt
+# print(np.mean(dif_deep))
+# print(np.std(dif_deep))
 
 from mlxtend.evaluate import permutation_test
+import matplotlib.patches as mpatches
+from matplotlib.pyplot import text
+
 def p_value_one_sided(treatment, control):
     p_value = permutation_test(treatment, control,
                             method='approximate',
@@ -122,12 +143,23 @@ def p_value_one_sided(treatment, control):
 print(f"p_value is {p_value_one_sided(dif_deep, dif_random)}")
 
 plt.title("Mutation Fitness Delta (distribution) POC", fontsize=30)
-plt.xlabel('Fitness Detla', fontsize=22)
+plt.xlabel('Fitness Delta', fontsize=22)
 plt.ylabel('# of Mutations', fontsize=22)
 plt.tick_params(axis='both', labelsize=15)
-plt.hist(dif_random, alpha=0.5, label='random')
-plt.hist(dif_deep, alpha=0.5, label='ANN')
-plt.legend(prop={'size': 20})
+plt.hist(dif_random, alpha=0.5, label='random', bins=100)
+plt.axvline(np.mean(dif_random), color='b', linestyle='dashed', linewidth=5)
+plt.hist(dif_deep, alpha=0.5, label='ANN', bins=100)
+plt.axvline(np.mean(dif_deep), color='r', linestyle='dashed', linewidth=5)
+random_patch = mpatches.Patch(alpha = 0.5,color='b', label='random: \nmean: {:.2f}\nstd: {:.2f}'.format(np.mean(dif_random),np.std(dif_random)))
+deep_patch = mpatches.Patch(alpha = 0.5, color='r',label='ANN: \nmean: {:.2f}\nstd: {:.2f}'.format(np.mean(dif_deep),np.std(dif_deep)))
+# mean_line_random_patch = mpatches.Patch(color='b',linestyle='dashed',label='random mean',linewidth=1)
+# mean_line_deep_patch = mpatches.Patch(color='r', linestyle='dashed',label='ANN mean')
+# plt.legend(handles=[random_patch, deep_patch, mean_line_random_patch, mean_line_deep_patch], frameon=True,prop={'size': 5})
+plt.legend(handles=[random_patch, deep_patch], frameon=True,prop={'size': 20})
+# plt.legend(prop={'size': 20})
+# for i, x in enumerate([np.mean(dif_deep),]):
+text(-1500, 500, "ANN mean = {:.2f}".format(np.mean(dif_deep)), rotation=0, color='r', size=20, verticalalignment='top')
+text(550, 300, "Random mean = {:.2f}".format(np.mean(dif_random)), rotation=0, color='b', size=20, verticalalignment='top')
 plt.show()
 
 
