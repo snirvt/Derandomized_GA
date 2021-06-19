@@ -16,17 +16,17 @@ Standard GA: RAZ - :white_check_mark:
 4) XO
 5) Fitness
 
-Embedding: SNIR
+Embedding: SNIR - :white_check_mark:
 ----------
 1) Turn Individual into a compress version with Random Walk.
 
-Neural Network: SNIR
+Neural Network: SNIR - :white_check_mark:
 ---------------
 1) Grind K mutations on an individual.
 2) Choose if to insert bad examples... \ if no  improvment target vector will be the zero vector
 3) Train NN, use softmax for prediction which indices to flip
 
-Visualization & Results: AMIR
+Visualization & Results: AMIR - :white_check_mark:
 ------------------------
 1) Run experiments with different hyper paramters.
 2) create nice plots with results
