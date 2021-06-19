@@ -18,13 +18,14 @@ Standard GA: RAZ - :white_check_mark:
 
 Embedding: SNIR - :white_check_mark:
 ----------
-1) Turn Individual into a compress version with Random Walk.
+1) Turn Individual into a compress version with DeepWalk/Node2Vec.
 
 Neural Network: SNIR - :white_check_mark:
 ---------------
-1) Grind K mutations on an individual.
-2) Choose if to insert bad examples... \ if no  improvment target vector will be the zero vector
-3) Train NN, use softmax for prediction which indices to flip
+1) Collect good mutation examples.
+2) Train NN, use softmax for prediction which indices to flip
+3) Create proof of concept.
+4) Apply in the evolution process.
 
 Visualization & Results: AMIR - :white_check_mark:
 ------------------------
